@@ -27,7 +27,7 @@ class FishSubState extends FlxSubState {
 
     override function create() {
         super.create();
-        fishMusic.loadEmbedded(AssetPaths.fishing__mp3);
+        fishMusic.loadEmbedded(AssetPaths.fishing__wav);
         fishMusic.play();
         FlxG.cameras.add(cammmmm, false);
         cammmmm.bgColor.alphaFloat = 0.5;

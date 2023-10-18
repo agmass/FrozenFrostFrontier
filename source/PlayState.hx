@@ -45,6 +45,7 @@ class PlayState extends FlxState
 	var pbears:FlxSpriteGroup = new FlxSpriteGroup();
 	var machines:FlxSpriteGroup = new FlxSpriteGroup();
 	var savedpenguins:FlxSpriteGroup = new FlxSpriteGroup();
+	var apples:FlxSpriteGroup = new FlxSpriteGroup();
 	var itemList:FlxSpriteGroup = new FlxSpriteGroup();
 	var look:Array<Array<Int>> = [];
 
@@ -110,6 +111,7 @@ class PlayState extends FlxState
 		add(trash);
 		add(seals);
 		add(pbears);
+		add(apples);
 		itemList.camera = uiCam;
 		add(itemList);
 		machinebars.camera = uiCam;
@@ -445,7 +447,16 @@ class PlayState extends FlxState
 						penguin.health = Reflect.field(entity.values, "ref");
 						seals.add(penguin);
 						//FlxTween.tween(penguin.scale, {y: 0.85}, 0.5, {type: PINGPONG, ease: FlxEase.cubeInOut});
-					}
+					}				
+				if (entity.name == "machine")
+				{
+					var penguin:FlxSprite = new FlxSprite(entity.x,entity.y);
+					penguin.camera = gameCam;
+					penguin.loadGraphic(AssetPaths.machin__png, false, 32, 64);
+					penguin.immovable = true; 
+					machines.add(penguin);
+					add(penguin);
+				}		
 				if (entity.name == "machine")
 				{
 					var penguin:FlxSprite = new FlxSprite(entity.x,entity.y);
@@ -455,16 +466,11 @@ class PlayState extends FlxState
 					machines.add(penguin);
 					add(penguin);
 				}
-				if (entity.name == "polarbear")
+				if (entity.name == "apple")
 				{
-					var penguin:FlxSprite = new FlxSprite(entity.x,entity.y);
+					var penguin:FlxSprite = new FlxSprite(entity.x,entity.y,AssetPaths.apple__png);
 					penguin.camera = gameCam;
-					penguin.loadGraphic(AssetPaths.PBEAR__png, true, 64, 32);
-					penguin.immovable = true; 
-					penguin.animation.add("unhappy", [0], 1);
-					penguin.animation.add("happy", [1], 1);
-					penguin.health = Reflect.field(entity.values, "ref");
-					pbears.add(penguin);
+					apples.add(penguin);
 				}
 			if (entity.name == "eventZone")
 			{
@@ -598,6 +604,13 @@ class PlayState extends FlxState
 		FlxG.collide(plr, seals);
 		FlxG.collide(plr, machines);
 		FlxG.collide(plr, pbears);
+		if (plr.bunnySprite.visible) {
+		FlxG.overlap(plr, apples, function(p, a) {
+			a.destroy();
+			apples.remove(a);
+		});
+		}
+		apples.visible = plr.bunnySprite.visible;
 		savedpenguins.visible = totalSaved.contains(1);
 		penguins.visible = !totalSaved.contains(1);
 		if (totalSaved.contains(1)) {
