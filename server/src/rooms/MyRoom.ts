@@ -18,6 +18,18 @@ export class MyRoom extends Room<MyRoomState> {
       player.ready = !player.ready;
     }); 
 
+    this.onMessage("finishBunny", (client, x) => {
+      const player = this.state.players.get(client.sessionId);
+      player.inMachine = false;
+      console.log(x);
+      if (x >= 100) {
+        setTimeout(() => {
+          this.broadcast("focus", {x: player.x - (1280 /2), y: player.y - (720 / 2), t: 3, tx: "The Bunnies have been fed!"});
+          this.state.saved.push(4);
+        }, 10)
+      }
+    }); 
+
     this.onMessage("dance", (client, x) => {
       const player = this.state.players.get(client.sessionId);
       player.dance = x;
@@ -128,13 +140,13 @@ export class MyRoom extends Room<MyRoomState> {
       if (this.state.saved.includes(2.1) && this.state.saved.includes(2.2) && this.state.saved.includes(2.3)) {
         if (!this.state.saved.includes(2)) {
           this.state.saved.push(2);
-          this.broadcast("focus", {x: 1307, y: 2304, t: 3, tx: "The seals have been fed!"});
+          this.broadcast("focus", {x: 1307-(1280/2), y: 2304-(720/2), t: 3, tx: "The seals have been fed!"});
         }
       }
       if (this.state.saved.includes(3.1) && this.state.saved.includes(3.2) && this.state.saved.includes(3.3)) {
         if (!this.state.saved.includes(3)) {
           this.state.saved.push(3);
-          this.broadcast("focus", {x: 3783-1280, y: 1252-720, t: 3, tx: "The bears have been saved!"});
+          this.broadcast("focus", {x: 3783-(1280/2), y: 1252-(720/2), t: 3, tx: "The bears have been saved!"});
         }
       }
       timerdelay -= 16.6;

@@ -45,15 +45,20 @@ class PlayState extends FlxState
 	var pbears:FlxSpriteGroup = new FlxSpriteGroup();
 	var machines:FlxSpriteGroup = new FlxSpriteGroup();
 	var savedpenguins:FlxSpriteGroup = new FlxSpriteGroup();
+	var bunnies:FlxSpriteGroup = new FlxSpriteGroup();
 	var apples:FlxSpriteGroup = new FlxSpriteGroup();
 	var itemList:FlxSpriteGroup = new FlxSpriteGroup();
 	var look:Array<Array<Int>> = [];
+	var bunnyMusic:FlxSound;
+	var bmhint:FlxSprite = new FlxSprite(0,0,AssetPaths.bmhint__png);
 
 	public static var roome:Room<MyRoomState>;
 	var machinebars:FlxSprite = new FlxSprite(0,0,AssetPaths.squarifier__png);
+	var machinetext:FlxText = new FlxText(0,0,0,"COLLECTED: 0", 64);
 	public static var client = new Client("ws://localhost:2567");
 	override public function create()
 	{
+		bmhint.visible = false;
 		FlxG.autoPause = false;
 		FlxG.cameras.reset(gameCam);
 		FlxG.cameras.add(uiCam, false);
@@ -110,11 +115,13 @@ class PlayState extends FlxState
 		add(tents);
 		add(trash);
 		add(seals);
+		add(bunnies);
 		add(pbears);
 		add(apples);
 		itemList.camera = uiCam;
 		add(itemList);
 		machinebars.camera = uiCam;
+		machinetext.camera = uiCam;
 		plr.camera = gameCam;
 		plr.additions.camera = gameCam;
 		plr.particles.camera = gameCam;
@@ -145,6 +152,8 @@ class PlayState extends FlxState
 		}
 		add(machinebars);
 		machinebars.visible = false;
+		add(machinetext);
+		machinetext.visible = false;
 		super.create();
 
 	}
@@ -381,16 +390,30 @@ class PlayState extends FlxState
 				});
 				item.listen("inMachine", function(c,p) {
 					if (c) {
+						var ogx = plr.x;
+						var ogy = plr.y;
+						bunnyMusic = new FlxSound();
+						bunnyMusic.loadEmbedded(AssetPaths.bunnyhop__mp3);
+						bunnyMusic.play();
+						new FlxTimer().start(60+35, (tmr) -> {
+							plr.x = ogx;
+							plr.y = ogy;
+							var col = 0;
+							apples.forEach((s) -> {if (!s.visible) col++;});
+							roome.send("finishBunny", col);
+						});
 						plr.bunnySprite.visible = true;
 						plr.visible = false;
 						FlxG.camera.follow(plr.bunnySprite);
 						machinebars.visible = true;
+						machinetext.visible = true;
 						FlxG.drawFramerate = 24;
 					} else {
 						plr.bunnySprite.visible = false;
 						plr.visible = true;
 						FlxG.camera.follow(plr);
 						machinebars.visible = false;
+						machinetext.visible = false;
 						FlxG.drawFramerate = 60;
 					}
 				});
@@ -447,7 +470,17 @@ class PlayState extends FlxState
 						penguin.health = Reflect.field(entity.values, "ref");
 						seals.add(penguin);
 						//FlxTween.tween(penguin.scale, {y: 0.85}, 0.5, {type: PINGPONG, ease: FlxEase.cubeInOut});
-					}				
+					}			
+				if (entity.name == "bunny")
+				{
+					var penguin:FlxSprite = new FlxSprite(entity.x,entity.y);
+					penguin.camera = gameCam;
+					penguin.loadGraphic(AssetPaths.bunny__png, true, 32, 32);
+					penguin.immovable = true; 
+					penguin.animation.add("unhappy", [0], 1);
+					bunnies.add(penguin);
+					//FlxTween.tween(penguin.scale, {y: 0.85}, 0.5, {type: PINGPONG, ease: FlxEase.cubeInOut});
+				}				
 				if (entity.name == "machine")
 				{
 					var penguin:FlxSprite = new FlxSprite(entity.x,entity.y);
@@ -457,14 +490,17 @@ class PlayState extends FlxState
 					machines.add(penguin);
 					add(penguin);
 				}		
-				if (entity.name == "machine")
+				if (entity.name == "polarbear")
 				{
 					var penguin:FlxSprite = new FlxSprite(entity.x,entity.y);
 					penguin.camera = gameCam;
-					penguin.loadGraphic(AssetPaths.machin__png, false, 32, 64);
+					penguin.loadGraphic(AssetPaths.PBEAR__png, true, 64, 32);
 					penguin.immovable = true; 
-					machines.add(penguin);
-					add(penguin);
+					penguin.animation.add("unhappy", [0], 1);
+					penguin.animation.add("happy", [1], 1);
+					penguin.animation.play("unhappy");
+					pbears.add(penguin);
+	
 				}
 				if (entity.name == "apple")
 				{
@@ -479,11 +515,6 @@ class PlayState extends FlxState
 				evZone.health = Reflect.field(entity.values, "x");
 				evZone.makeGraphic(entity.width, entity.height, FlxColor.TRANSPARENT);
 				eventors.add(evZone);
-				if (evZone.toSend == "machineMode") {
-					var tutorialMusic:FlxSound = new FlxSound();
-					tutorialMusic.loadEmbedded(AssetPaths.bunnyhop__mp3);
-					tutorialMusic.play();
-				}
 			}
 			
 		}
@@ -491,6 +522,18 @@ class PlayState extends FlxState
 	override public function update(elapsed:Float)
 	{
 		var e = 0;
+		if (machinetext.visible) {
+			machinetext.screenCenter(X);
+			var col = 0;
+			apples.forEach((s) -> {if (!s.visible) col++;});
+			machinetext.y = 40;
+			if (col >= 100) {
+				machinetext.color = FlxColor.GREEN;
+			} else {
+				machinetext.color = FlxColor.RED;
+			}
+			machinetext.text = "COLLECTED: " + col + "/100";
+		}
 		for (i in itemList) {
 			i.x = 20 + (34 * e);
 			i.y = 20 + 68;
@@ -526,6 +569,13 @@ class PlayState extends FlxState
 		}
 		if (FlxG.keys.justPressed.SPACE) {
 			var spaceUsed:Bool = false;
+			if (plr.lockreasoning == "bmhint") {
+				plr.lockreasoning = "";
+				plr.lockplayer = false;
+				spaceUsed = true;
+				bmhint.visible = false;
+				roome.send("machineMode");
+			}
 			if (!plr.bunnySprite.visible) {
 			FlxG.overlap(plr, trash, function(plr2, tras) {
 				spaceUsed = true;
@@ -560,7 +610,19 @@ class PlayState extends FlxState
 			});
 			if (!spaceUsed) {
 				FlxG.overlap(plr, eventors, function(p, ev) {
-					roome.send(ev.toSend, ev.health);
+					if (ev.toSend == "machineMode") {
+						if (!bmhint.visible) {
+						bmhint.destroy();
+						bmhint = new FlxSprite(0,0,AssetPaths.bmhint__png);
+						bmhint.camera = uiCam;
+						bmhint.screenCenter();
+						plr.lockplayer = true;
+						plr.lockreasoning = "bmhint";
+						add(bmhint);
+						}
+					} else {
+						roome.send(ev.toSend, ev.health);
+					}
 					spaceUsed = true;
 				});
 			}
@@ -602,12 +664,12 @@ class PlayState extends FlxState
 		FlxG.collide(plr, walls);
 		FlxG.collide(plr, tents);
 		FlxG.collide(plr, seals);
+		FlxG.collide(plr, bunnies);
 		FlxG.collide(plr, machines);
 		FlxG.collide(plr, pbears);
 		if (plr.bunnySprite.visible) {
 		FlxG.overlap(plr, apples, function(p, a) {
-			a.destroy();
-			apples.remove(a);
+			a.visible = false;
 		});
 		}
 		apples.visible = plr.bunnySprite.visible;
