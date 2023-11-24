@@ -55,7 +55,7 @@ class PlayState extends FlxState
 	public static var roome:Room<MyRoomState>;
 	var machinebars:FlxSprite = new FlxSprite(0,0,AssetPaths.squarifier__png);
 	var machinetext:FlxText = new FlxText(0,0,0,"COLLECTED: 0", 64);
-	public static var client = new Client("ws://localhost:2567");
+	public static var client = new Client("ws://10.10.54.185:2567");
 	override public function create()
 	{
 		bmhint.visible = false;
@@ -496,6 +496,7 @@ class PlayState extends FlxState
 					penguin.camera = gameCam;
 					penguin.loadGraphic(AssetPaths.PBEAR__png, true, 64, 32);
 					penguin.immovable = true; 
+					penguin.health = Reflect.field(entity.values, "ref");
 					penguin.animation.add("unhappy", [0], 1);
 					penguin.animation.add("happy", [1], 1);
 					penguin.animation.play("unhappy");
@@ -547,20 +548,22 @@ class PlayState extends FlxState
 			}
 		});
 		pbears.forEach((seal) -> {
-			if (totalSaved.contains(seal.health)) {
-				seal.animation.play("happy");
-				if (seal.health == 3.1) {
+				if (totalSaved.contains(3.1) && seal.health == 3.1) {
 					seal.setPosition(3567, 1191);
+					seal.animation.play("happy");
+				}  else {
+					seal.animation.play("unhappy");
 				}
-				if (seal.health == 3.2) {
+				if (totalSaved.contains(3.2) && seal.health == 3.2) {
 					seal.setPosition(3884, 1150);
+				}  else {
+					seal.animation.play("unhappy");
 				}
-				if (seal.health == 3.3) {
+				if (totalSaved.contains(3.3) && seal.health == 3.3) {
 					seal.setPosition(2685, 1020);
+				}  else {
+					seal.animation.play("unhappy");
 				}
-			} else {
-				seal.animation.play("unhappy");
-			}
 		});
 		persistentDraw = true;
 		persistentUpdate = true;

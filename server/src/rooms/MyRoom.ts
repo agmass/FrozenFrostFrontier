@@ -89,9 +89,9 @@ export class MyRoom extends Room<MyRoomState> {
       }
     }); 
     this.onMessage("saveBear", (client, x) => {
-      if (!this.state.saved.includes(x)) {
+      var fixed = parseFloat(x.toFixed(2));
+      if (!this.state.saved.includes(fixed)) {
         const player = this.state.players.get(client.sessionId);
-        var fixed = parseFloat(x.toFixed(1));
         console.log(fixed);
         if (x > 3) {
           if (x < 4) {

@@ -27,7 +27,7 @@ class LeftSaveSubState extends FlxSubState {
         cammmmm.bgColor.alphaFloat = 0.5;
         _parentState.persistentDraw = true;
         _parentState.persistentUpdate = true;
-        for (i in 1...3) {
+        for (i in 1...5) {
             if (!saved.contains(i)) {
                 trace("Does not contain");
                 var card:FlxSprite = new FlxSprite(0,0,"assets/images/namecard" + Std.string(i) + ".png");

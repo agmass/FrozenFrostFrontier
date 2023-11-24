@@ -17,7 +17,7 @@ class RoomsState extends FlxState
 {
 	var back:FlxText;
 	var texts:FlxSpriteGroup = new FlxSpriteGroup(0, 0);
-	var client = new Client("ws://localhost:2567");
+	var client = new Client("ws://10.10.54.185:2567");
 	var namemap:Map<FlxText, String> = [];
 
 	override public function create()
